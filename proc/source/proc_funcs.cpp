@@ -22,7 +22,7 @@ void ReadFile(const char *file_name, SPU_t *SPU)
     FILE *input = fopen(file_name, "rb");
     assert(input);
 
-    //fscanf(input, "%zu", &SPU->code_size);
+    //fscanf(input, "%zu", &SPU->code_size)
     int size = 0;
     fread(&size, sizeof(int), 1, input);
     SPU->code_size = (size_t) size;

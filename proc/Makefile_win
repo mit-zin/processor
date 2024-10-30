@@ -18,6 +18,7 @@ GPP=g++ $(FLAGS) $(INCL)
 OBJECTS=$(OBJ_DIR)\processor.o $(OBJ_DIR)\verify_funcs.o $(OBJ_DIR)\stack_funcs.o\
 	$(OBJ_DIR)\read_file.o $(OBJ_DIR)\proc_funcs.o
 
+
 processor: $(OBJECTS)
 	$(GPP) $(OBJECTS) -o processor
 

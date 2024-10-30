@@ -13568,7 +13568,7 @@ stack [0x7f01d9500048]
 CANARY: B00B5
 CANARY: B00B5
 	called from ./source/stack_funcs.cpp:59 (StackPop)
-	capacity = 30
+	capacity = 3
 	size = 1
 	data [0x511000000048]
 		CANARY: B00B5
