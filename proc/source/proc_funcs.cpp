@@ -49,11 +49,11 @@ errors_t SPU_Dump(SPU_t *SPU)
     static bool first_file_opening = true;
     if (first_file_opening)
     {
-        dump_out = fopen("./SPU_dump", "w");
+        dump_out = fopen("./SPU_dump.txt", "w");
         first_file_opening = false;
     }
     else
-        dump_out = fopen("./SPU_dump", "a");
+        dump_out = fopen("./SPU_dump.txt", "a");
     if (!dump_out)
         return FILE_NULL_PTR;
 

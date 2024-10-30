@@ -6,7 +6,7 @@ assert(0) -> msg abort()
 // #define NDEBUG
 //
 // #define CANARY_ON
-// #ifdef CANARY_ON
+// #ifdef CANARY_O
 // #define CANARY(...) __VA_ARGS__
 //
 // #define HASH_ON

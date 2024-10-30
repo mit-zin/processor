@@ -12,7 +12,6 @@ int main()
 
     SPU_Dump(&SPU);
 
-
     Run(&SPU);
     DUMP(&SPU.stack, 0);
 

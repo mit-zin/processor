@@ -1,0 +1,5 @@
+**/*.o
+**/*.exe
+
+/proc/*.txt
+/proc/Makefile_win
