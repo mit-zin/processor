@@ -1,0 +1,12 @@
+1. MYASSERT(0, "Null ptr move to func", return ERR_NULL_PTR)
+assert(0) -> msg abort()
+2. do{}while(0) in all macros
+3. static in K&R use in stack fuction
+4. WSL install + extension for VSCode to work + learn how to use AddressSanitizier
+// #define NDEBUG
+//
+// #define CANARY_ON
+// #ifdef CANARY_ON
+// #define CANARY(...) __VA_ARGS__
+//
+// #define HASH_ON
