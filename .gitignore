@@ -1,5 +1,8 @@
 **/*.o
 **/*.exe
+objects
 
 proc/*.txt
-proc/Makefile_win
+
+assem
+spu

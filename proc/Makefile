@@ -23,8 +23,8 @@ GPP=g++ $(FLAGS) $(INCL)
 OBJECTS=$(OBJ_DIR)processor.o $(OBJ_DIR)verify_funcs.o $(OBJ_DIR)stack_funcs.o\
 	$(OBJ_DIR)proc_funcs.o ../common.o
 
-processor: $(OBJECTS)
-	$(GPP) $(OBJECTS) -o processor
+spu: $(OBJECTS)
+	$(GPP) $(OBJECTS) -o spu
 
 $(OBJ_DIR)processor.o: $(SRC_DIR)processor.cpp
 	$(GPP) -c $(SRC_DIR)processor.cpp -o $(OBJ_DIR)processor.o

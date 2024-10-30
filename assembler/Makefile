@@ -12,8 +12,8 @@ FLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-o
 	-flto-odr-type-merging -fno-omit-frame-pointer -Wlarger-than=8192 -Wstack-usage=8192 -pie\
 	-fPIE -Werror=vla -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-assembler: assembler.o compiler.o ../common.o
-	g++ $(FLAGS) assembler.o compiler.o ../common.o -o assembler
+assem: assembler.o compiler.o ../common.o
+	g++ $(FLAGS) assembler.o compiler.o ../common.o -o assem
 
 assembler.o: assembler.cpp
 	g++ $(FLAGS) -c assembler.cpp
