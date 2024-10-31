@@ -42,6 +42,8 @@ typedef enum
     JNE
 } commands_t;
 
+const int PRECISION = 100;
+
 const int RECALLOC_COEF = 2;
 const int STACK_RECALLOC_COEF = 2;
 const int CODE_RECALLOC_COEF = 2;

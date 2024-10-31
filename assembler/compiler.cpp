@@ -102,7 +102,7 @@ void Compile(Compiler_t *compiler)
                 else
                 {
                     compiler->code[compiler->ip++] = 0;
-                    compiler->code[compiler->ip++] = atoi(compiler->str_arr.strings[str_ind++]);
+                    compiler->code[compiler->ip++] = (int) (PRECISION * atof(compiler->str_arr.strings[str_ind++]));
                 }
 
                 break;

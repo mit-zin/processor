@@ -1,6 +1,9 @@
 **/*.o
 **/*.exe
+**/*.asm
 objects
+
+!program.asm
 
 proc/*.txt
 

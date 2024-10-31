@@ -22,7 +22,6 @@ void ReadFile(const char *file_name, SPU_t *SPU)
     FILE *input = fopen(file_name, "rb");
     assert(input);
 
-    //fscanf(input, "%zu", &SPU->code_size)
     int size = 0;
     fread(&size, sizeof(int), 1, input);
     SPU->code_size = (size_t) size;
@@ -31,12 +30,6 @@ void ReadFile(const char *file_name, SPU_t *SPU)
     assert(SPU->code);
 
     fread(SPU->code, sizeof(int), SPU->code_size, input);
-
-    /*for (size_t i = 0; i < SPU->code_size; i++)
-        SPU->code[i] = CODE_POISON;
-
-    for (size_t i = 0; i < SPU->code_size; i++)
-        fscanf(input, "%d", SPU->code + i);*/
 
     fclose(input);
 }
@@ -78,7 +71,7 @@ errors_t SPU_Dump(SPU_t *SPU)
 
     fprintf(dump_out, "registers:\n");
     for (size_t i = 0; i < NUM_OF_REGISTERS; i++)
-        fprintf(dump_out, "r%zu=%d, ", i, SPU->registers[i]);
+        fprintf(dump_out, "r%zu=%f, ", i, ((double) SPU->registers[i]) / PRECISION);
 
     fprintf(dump_out, "\n\nStack:\n");
     for (size_t i = 0; i < SPU->stack.size; i++)
@@ -106,15 +99,15 @@ void Run(SPU_t *SPU)
         {
             case PUSH :
                 if (SPU->code[SPU->ip++] == 1)
-                    assert(!StackPush(&SPU->stack, (stack_elem_t) SPU->registers[SPU->code[SPU->ip++]]));
+                    assert(!StackPush(&SPU->stack, ((stack_elem_t) SPU->registers[SPU->code[SPU->ip++]]) / PRECISION));
                 else
-                    assert(!StackPush(&SPU->stack, (stack_elem_t) SPU->code[SPU->ip++]));
+                    assert(!StackPush(&SPU->stack, ((stack_elem_t) SPU->code[SPU->ip++]) / PRECISION));
                 break;
             case POP :
             {
                 stack_elem_t popped_elem = 0;
                 assert(!StackPop(&SPU->stack, &popped_elem));
-                SPU->registers[SPU->code[SPU->ip++]] = (int) popped_elem;
+                SPU->registers[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
                 break;
             }
             case ADD :
