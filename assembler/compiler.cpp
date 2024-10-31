@@ -20,7 +20,7 @@ void CreateCompiler(Compiler_t *compiler)
 
     compiler->str_arr.size_of_arr = MIN_SIZE;
 
-    compiler->str_arr.strings = (char (*)[MAX_CMD_LEN]) calloc(MIN_SIZE, sizeof(char [MAX_CMD_LEN]));
+    compiler->str_arr.strings = (char (*)[MAX_CMD_LEN]) calloc(MIN_SIZE, sizeof(char) * MAX_CMD_LEN);
     assert(compiler->str_arr.strings);
 
     for (size_t i = 0; i < MIN_SIZE; i++)
@@ -47,11 +47,12 @@ void ReadAsmFile(Str_arr_struct *str_arr)
     size_t i = 0;
     while (fscanf(input, "%s", str_arr->strings[i++]) != EOF)
     {
-        if (str_arr->size_of_arr == i)
+        if (str_arr->size_of_arr == i + 1)
         {
             str_arr->strings = (char (*)[MAX_CMD_LEN]) Recalloc(str_arr->strings,
-                sizeof(char *) * str_arr->size_of_arr,
-                str_arr->size_of_arr * RECALLOC_COEF, sizeof(char *));
+                sizeof(char) * MAX_CMD_LEN * str_arr->size_of_arr,
+                str_arr->size_of_arr * RECALLOC_COEF, sizeof(char) * MAX_CMD_LEN);
+            str_arr->size_of_arr *= RECALLOC_COEF;
             assert(str_arr->strings);
         }
     }
@@ -73,10 +74,6 @@ void Compile(Compiler_t *compiler)
     assert(labels);
     int num_of_labels = 0;
 
-    //printf("%s\n", compiler->str_arr.strings[0]);
-
-    //int str_ind = 0;
-
     for (size_t str_ind = 0,  i = 0; i < 2; i++, str_ind = 0)
     {
         while (str_ind < compiler->str_arr.num_of_strings)
@@ -85,6 +82,7 @@ void Compile(Compiler_t *compiler)
             {
                 compiler->code =(int *) Recalloc(compiler->code, sizeof(int) * compiler->size_of_code,
                     compiler->size_of_code * CODE_RECALLOC_COEF, sizeof(int));
+                compiler->size_of_code *= CODE_RECALLOC_COEF;
                 assert(compiler->code);
             }
 

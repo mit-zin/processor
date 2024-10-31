@@ -56,22 +56,22 @@ errors_t SPU_Dump(SPU_t *SPU)
     {
         fprintf(dump_out, "code:\n");
         for (size_t i = 0; i < SPU->code_size; i++)
-            fprintf(dump_out, "%02zX ", i);
+            fprintf(dump_out, "%8zX ", i);
         fprintf(dump_out, "\n");
         for (size_t i = 0; i < SPU->code_size; i++)
-            fprintf(dump_out, "%02X ", SPU->code[i]);
+            fprintf(dump_out, "%8X ", SPU->code[i]);
         fprintf(dump_out, "\n");
         for (size_t i = 0; i < SPU->ip; i++)
-            fprintf(dump_out, "   ");
+            fprintf(dump_out, "         ");
         fprintf(dump_out, "^\n");
         for (size_t i = 0; i < SPU->ip; i++)
-            fprintf(dump_out, "   ");
+            fprintf(dump_out, "         ");
         fprintf(dump_out, "ip=%02zX\n\n", SPU->ip);
     }
 
     fprintf(dump_out, "registers:\n");
     for (size_t i = 0; i < NUM_OF_REGISTERS; i++)
-        fprintf(dump_out, "r%zu=%f, ", i, ((double) SPU->registers[i]) / PRECISION);
+        fprintf(dump_out, "r%zu=%g, ", i, ((double) SPU->registers[i]) / PRECISION);
 
     fprintf(dump_out, "\n\nStack:\n");
     for (size_t i = 0; i < SPU->stack.size; i++)
