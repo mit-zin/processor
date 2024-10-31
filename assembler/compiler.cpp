@@ -11,15 +11,17 @@ void CreateCompiler(Compiler_t *compiler)
 {
     assert(compiler);
 
-    compiler->input = fopen("../program.asm", "r");
     compiler->output = fopen("../program_code.txt", "wb");
-    assert(compiler->input);
-    assert(compiler->output);
 
-    compiler->size = MIN_SIZE;
+    compiler->size_of_code = MIN_SIZE;
 
     compiler->code = (int *) calloc(MIN_SIZE, sizeof(int));
     assert(compiler->code);
+
+    compiler->str_arr.size_of_arr = MIN_SIZE;
+
+    compiler->str_arr.strings = (char (*)[MAX_CMD_LEN]) calloc(MIN_SIZE, sizeof(char [MAX_CMD_LEN]));
+    assert(compiler->str_arr.strings);
 
     for (size_t i = 0; i < MIN_SIZE; i++)
         compiler->code[i] = CODE_POISON;
@@ -30,17 +32,39 @@ void DestroyCompiler(Compiler_t *compiler)
     assert(compiler);
 
     free(compiler->code);
+    free(compiler->str_arr.strings);
 
-    fclose(compiler->input);
     fclose(compiler->output);
+}
+
+void ReadAsmFile(Str_arr_struct *str_arr)
+{
+    assert(str_arr);
+
+    FILE *input = fopen("../program.asm", "rb");
+    assert(input);
+
+    size_t i = 0;
+    while (fscanf(input, "%s", str_arr->strings[i++]) != EOF)
+    {
+        if (str_arr->size_of_arr == i)
+        {
+            str_arr->strings = (char (*)[MAX_CMD_LEN]) Recalloc(str_arr->strings,
+                sizeof(char *) * str_arr->size_of_arr,
+                str_arr->size_of_arr * RECALLOC_COEF, sizeof(char *));
+            assert(str_arr->strings);
+        }
+    }
+    str_arr->num_of_strings = i - 1;
+
+    fclose(input);
 }
 
 void Compile(Compiler_t *compiler)
 {
     assert(compiler);
 
-
-    char command[MAX_CMD_LEN] = {};
+    ReadAsmFile(&compiler->str_arr);
 
     compiler->ip = 1;
 
@@ -49,47 +73,45 @@ void Compile(Compiler_t *compiler)
     assert(labels);
     int num_of_labels = 0;
 
-    for (int i = 0; i < 2; i++)
+    //printf("%s\n", compiler->str_arr.strings[0]);
+
+    //int str_ind = 0;
+
+    for (size_t str_ind = 0,  i = 0; i < 2; i++, str_ind = 0)
     {
-        while (fscanf(compiler->input, "%s", command) != EOF)
+        while (str_ind < compiler->str_arr.num_of_strings)
         {
-            if (compiler->size - compiler->ip < 3)
+            if (compiler->size_of_code - compiler->ip < 3)
             {
-                compiler->code =(int *) Recalloc(compiler->code, sizeof(int) * compiler->size,
-                    compiler->size * CODE_RECALLOC_COEF, sizeof(int));
+                compiler->code =(int *) Recalloc(compiler->code, sizeof(int) * compiler->size_of_code,
+                    compiler->size_of_code * CODE_RECALLOC_COEF, sizeof(int));
                 assert(compiler->code);
             }
 
-            switch(ReadCommand(command))
+            switch(ReadCommand(compiler->str_arr.strings[str_ind++]))
             {
             case PUSH :
             {
                 compiler->code[compiler->ip++] = PUSH;
 
-                char arg[10] = "";
-                assert(fscanf(compiler->input, "%s", arg) != EOF);
-
-                if (tolower((int) arg[0]) == 'r')
+                if (tolower((int) compiler->str_arr.strings[str_ind][0]) == 'r')
                 {
                     compiler->code[compiler->ip++] = 1;
-                    compiler->code[compiler->ip++] = atoi(arg + 1);
+                    compiler->code[compiler->ip++] = atoi(compiler->str_arr.strings[str_ind++] + 1);
                 }
                 else
                 {
                     compiler->code[compiler->ip++] = 0;
-                    compiler->code[compiler->ip++] = atoi(arg);
+                    compiler->code[compiler->ip++] = atoi(compiler->str_arr.strings[str_ind++]);
                 }
 
-                continue;
+                break;
             }
             case POP :
             {
                 compiler->code[compiler->ip++] = POP;
 
-                char arg[4] = "";
-                assert(fscanf(compiler->input, "%s", arg) != EOF);
-                compiler->code[compiler->ip++] = atoi(arg + 1);
-
+                compiler->code[compiler->ip++] = atoi(compiler->str_arr.strings[str_ind++] + 1);
                 break;
             }
             case ADD :
@@ -127,41 +149,41 @@ void Compile(Compiler_t *compiler)
                 break;
             case JMP :
                 compiler->code[compiler->ip++] = JMP;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             case JA :
                 compiler->code[compiler->ip++] = JA;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             case JAE :
                 compiler->code[compiler->ip++] = JAE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             case JB :
                 compiler->code[compiler->ip++] = JB;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             case JBE :
                 compiler->code[compiler->ip++] = JBE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             case JE :
                 compiler->code[compiler->ip++] = JE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             case JNE :
                 compiler->code[compiler->ip++] = JNE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->input, num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
                 break;
             default :
-                strcpy(labels[num_of_labels].name, command);
+                strcpy(labels[num_of_labels].name, compiler->str_arr.strings[str_ind - 1]);
                 labels[num_of_labels++].adres = compiler->ip - 1;
             }
+        }
+
+        compiler->ip = (i == 0) ? 1 : compiler->ip;
     }
-    printf("%u\n", labels[0].adres);
-    fseek(compiler->input, 0, SEEK_SET);
-    compiler->ip = (i == 0) ? 1 : compiler->ip;
-    }
+
     compiler->code[0] = compiler->ip - 1;
 
     fwrite(compiler->code, sizeof(int), compiler->ip, compiler->output);
@@ -217,19 +239,17 @@ commands_t ReadCommand(const char command[MAX_CMD_LEN])
     return NOT_COMMAND;
 }
 
-int JumpArg(FILE *input, int num_of_labels, const Label_t *labels)
+int JumpArg(const char *string, int num_of_labels, const Label_t *labels)
 {
-    assert(input);
     assert(labels);
 
     int arg = 0;
-    if (!fscanf(input, "%d", &arg))
+    if (!sscanf(string, "%d", &arg))
     {
-        char lbl[MAX_CMD_LEN] = {};
-        fscanf(input, "%s", lbl);
+
         for (int i = 0; i < num_of_labels; i++)
         {
-            if (!strcmp(lbl, labels[i].name))
+            if (!strcmp(string, labels[i].name))
                 arg = labels[i].adres;
         }
     }

@@ -3,14 +3,14 @@
 
 #include "common.h"
 
-void *Recalloc(void *data, size_t data_size, size_t number, size_t size)
+void *Recalloc(void *data, size_t data_size_bytes, size_t number, size_t size)
 {
     assert(data);
 
     data = realloc(data, number * size);
 
-    for (size_t i = data_size; i < number * size; i++)
-        *(int *) (data + i) = 0;
+    for (size_t i = data_size_bytes; i < number * size; i++)
+        *(char *) (data + i) = 0;
 
     return data;
 }

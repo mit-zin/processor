@@ -5,8 +5,6 @@
 #include "stack.h"
 #include "verify_funcs.h"
 
-const int RECALLOC_COEF = 2;
-
 errors_t CreateStack (Stack_t *stack, size_t capacity);
 errors_t StackPop    (Stack_t *stack, stack_elem_t *poped_elem);
 errors_t StackPush   (Stack_t *stack, stack_elem_t pushed_elem);

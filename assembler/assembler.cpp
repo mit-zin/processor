@@ -5,7 +5,7 @@
 
 int main()
 {
-    //fopen
+    //fope
     Compiler_t compiler = {};
     CreateCompiler(&compiler);
 

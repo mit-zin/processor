@@ -64,8 +64,8 @@ errors_t StackPop(Stack_t *stack, stack_elem_t *poped_elem)
 
 
     errors_t res;
-    if (stack->size < stack->capacity / RECALLOC_COEF &&
-        stack->capacity / RECALLOC_COEF > stack->initial_cpct && !(res = StackRecalloc(stack)))
+    if (stack->size < stack->capacity / STACK_RECALLOC_COEF &&
+        stack->capacity / STACK_RECALLOC_COEF > stack->initial_cpct && !(res = StackRecalloc(stack)))
         return res;
 
     ON_DEBUG(VERIFY_STACK(stack);)
@@ -78,7 +78,7 @@ static errors_t StackRecalloc(Stack_t *stack)
     ON_DEBUG(VERIFY_STACK(stack);)
     //DUMP(stack, 0);
 
-    if (stack->capacity > MAX_CAPACITY / RECALLOC_COEF)
+    if (stack->capacity > MAX_CAPACITY / STACK_RECALLOC_COEF)
         return CAPACITY_LIMIT_REACHED;
 
     ON_DEBUG(stack->data--;)
@@ -87,20 +87,20 @@ static errors_t StackRecalloc(Stack_t *stack)
     {
         stack->data = (stack_elem_t *) Recalloc(stack->data,
             (stack->capacity ON_DEBUG(+ 2)) * sizeof(stack_elem_t),
-            stack->capacity * RECALLOC_COEF ON_DEBUG(+ 2), sizeof(stack_elem_t));
+            stack->capacity * STACK_RECALLOC_COEF ON_DEBUG(+ 2), sizeof(stack_elem_t));
 
         FillPoison(stack->data + stack->capacity ON_DEBUG(+ 1),
-                   stack->capacity * (RECALLOC_COEF - 1), POISON);
+                   stack->capacity * (STACK_RECALLOC_COEF - 1), POISON);
 
-        stack->capacity *= RECALLOC_COEF;
+        stack->capacity *= STACK_RECALLOC_COEF;
     }
-    else if (stack->size < stack->capacity / RECALLOC_COEF)
+    else if (stack->size < stack->capacity / STACK_RECALLOC_COEF)
     {
         stack->data = (stack_elem_t *) Recalloc(stack->data,
             (stack->capacity ON_DEBUG(+ 2)) * sizeof(stack_elem_t),
-            stack->capacity / RECALLOC_COEF ON_DEBUG(+ 2), sizeof(stack_elem_t));
+            stack->capacity / STACK_RECALLOC_COEF ON_DEBUG(+ 2), sizeof(stack_elem_t));
 
-        stack->capacity /= RECALLOC_COEF;
+        stack->capacity /= STACK_RECALLOC_COEF;
     }
 
     if (!stack->data)
