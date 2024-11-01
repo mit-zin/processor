@@ -11,5 +11,6 @@ void     DestroySPU(SPU_t *SPU);
 void     ReadFile  (const char *filename, SPU_t *SPU);
 errors_t SPU_Dump  (SPU_t *SPU);
 void     Run       (SPU_t *SPU);
+stack_elem_t GetArg(SPU_t *SPU);
 
 #endif

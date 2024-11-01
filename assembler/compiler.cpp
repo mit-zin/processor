@@ -92,16 +92,7 @@ void Compile(Compiler_t *compiler)
             {
                 compiler->code[compiler->ip++] = PUSH;
 
-                if (tolower((int) compiler->str_arr.strings[str_ind][0]) == 'r')
-                {
-                    compiler->code[compiler->ip++] = 1;
-                    compiler->code[compiler->ip++] = atoi(compiler->str_arr.strings[str_ind++] + 1);
-                }
-                else
-                {
-                    compiler->code[compiler->ip++] = 0;
-                    compiler->code[compiler->ip++] = (int) (PRECISION * atof(compiler->str_arr.strings[str_ind++]));
-                }
+                ReadPushArg(compiler, &str_ind);
 
                 break;
             }
@@ -109,7 +100,7 @@ void Compile(Compiler_t *compiler)
             {
                 compiler->code[compiler->ip++] = POP;
 
-                compiler->code[compiler->ip++] = atoi(compiler->str_arr.strings[str_ind++] + 1);
+                ReadPopArg(compiler, &str_ind);
                 break;
             }
             case ADD :
@@ -147,31 +138,38 @@ void Compile(Compiler_t *compiler)
                 break;
             case JMP :
                 compiler->code[compiler->ip++] = JMP;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             case JA :
                 compiler->code[compiler->ip++] = JA;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             case JAE :
                 compiler->code[compiler->ip++] = JAE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             case JB :
                 compiler->code[compiler->ip++] = JB;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             case JBE :
                 compiler->code[compiler->ip++] = JBE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             case JE :
                 compiler->code[compiler->ip++] = JE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             case JNE :
                 compiler->code[compiler->ip++] = JNE;
-                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++], num_of_labels, labels);
+                compiler->code[compiler->ip++] = JumpArg(compiler->str_arr.strings[str_ind++],
+                                                         num_of_labels, labels);
                 break;
             default :
                 strcpy(labels[num_of_labels].name, compiler->str_arr.strings[str_ind - 1]);
@@ -235,6 +233,65 @@ commands_t ReadCommand(const char command[MAX_CMD_LEN])
         return JNE;
 
     return NOT_COMMAND;
+}
+
+void ReadPopArg(Compiler_t *compiler, size_t *str_ind)
+{
+    assert(compiler);
+    assert(str_ind);
+
+    if (compiler->str_arr.strings[*str_ind][0] == '[')
+    {
+        compiler->code[compiler->ip] = 4;
+        if (tolower((int) compiler->str_arr.strings[*str_ind][1]) == 'r')
+        {
+            compiler->code[compiler->ip++] |= 2;
+            sscanf(compiler->str_arr.strings[(*str_ind)++] + 2, "%d]", &compiler->code[compiler->ip++]);
+        }
+        else
+        {
+            compiler->code[compiler->ip++] |= 1;
+            sscanf(compiler->str_arr.strings[(*str_ind)++] + 1, "%d]", &compiler->code[compiler->ip++]);
+        }
+    }
+    else
+    {
+        compiler->code[compiler->ip++] = 2;
+        sscanf(compiler->str_arr.strings[(*str_ind)++] + 1, "%d", &compiler->code[compiler->ip++]);// = atoi(compiler->str_arr.strings[(*str_ind)++] + 1);
+    }
+}
+
+void ReadPushArg(Compiler_t *compiler, size_t *str_ind)
+{
+    assert(compiler);
+    assert(str_ind);
+
+    if (compiler->str_arr.strings[*str_ind][0] == '[')
+    {
+        compiler->code[compiler->ip] = 4;
+        if (tolower((int) compiler->str_arr.strings[*str_ind][1]) == 'r')
+        {
+            compiler->code[compiler->ip++] |= 2;
+            sscanf(compiler->str_arr.strings[(*str_ind)++] + 2, "%d]", &compiler->code[compiler->ip++]);
+        }
+        else
+        {
+            compiler->code[compiler->ip++] |= 1;
+            sscanf(compiler->str_arr.strings[(*str_ind)++] + 1, "%d]", &compiler->code[compiler->ip]);
+            compiler->code[compiler->ip++] *= PRECISION;
+        }
+    }
+    else if (tolower((int) compiler->str_arr.strings[*str_ind][0]) == 'r')
+    {
+        compiler->code[compiler->ip++] = 2;
+        sscanf(compiler->str_arr.strings[(*str_ind)++] + 1, "%d", &compiler->code[compiler->ip++]);// = atoi(compiler->str_arr.strings[(*str_ind)++] + 1);
+    }
+    else
+    {
+        compiler->code[compiler->ip++] = 1;
+        compiler->code[compiler->ip++] =
+            (int) (PRECISION * atof(compiler->str_arr.strings[(*str_ind)++]));
+    }
 }
 
 int JumpArg(const char *string, int num_of_labels, const Label_t *labels)

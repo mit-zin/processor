@@ -98,16 +98,27 @@ void Run(SPU_t *SPU)
         switch (SPU->code[SPU->ip++])
         {
             case PUSH :
-                if (SPU->code[SPU->ip++] == 1)
-                    assert(!StackPush(&SPU->stack, ((stack_elem_t) SPU->registers[SPU->code[SPU->ip++]]) / PRECISION));
-                else
-                    assert(!StackPush(&SPU->stack, ((stack_elem_t) SPU->code[SPU->ip++]) / PRECISION));
+                assert(!StackPush(&SPU->stack, GetArg(SPU)));
+
                 break;
             case POP :
             {
                 stack_elem_t popped_elem = 0;
                 assert(!StackPop(&SPU->stack, &popped_elem));
-                SPU->registers[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
+                int arg_type = SPU->code[SPU->ip++];
+                printf("%d\n", SPU->RAM[SPU->code[SPU->ip]]);
+                if (arg_type & 4)
+                {
+                    if (arg_type & 1)
+                        SPU->RAM[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
+                    else if (arg_type & 2)
+                        SPU->RAM[SPU->registers[SPU->code[SPU->ip++]] / PRECISION] =
+                            (int) (PRECISION * popped_elem);
+                }
+                else
+                    SPU->registers[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
+
+
                 break;
             }
             case ADD :
@@ -258,6 +269,23 @@ void Run(SPU_t *SPU)
     }
 }
 
+stack_elem_t GetArg(SPU_t *SPU)
+{
+    assert(SPU);
+
+    int arg_type = SPU->code[SPU->ip++];
+    int res = SPU->code[SPU->ip++];
+
+    if (arg_type & 2)
+        res = SPU->registers[res];
+    if (arg_type & 4)
+    {
+        res = SPU->RAM[res / PRECISION];
+    }
+
+    return ((stack_elem_t) res) / PRECISION;
+}
+
 void DestroySPU(SPU_t *SPU)
 {
     assert(SPU);
@@ -267,5 +295,6 @@ void DestroySPU(SPU_t *SPU)
     SPU->ip = 0;
     for (size_t i = 0; i < NUM_OF_REGISTERS; i++)
         SPU->registers[i] = 0;
+
     DestroyStack(&SPU->stack);
 }

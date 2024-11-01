@@ -34,6 +34,8 @@ void DestroyCompiler(Compiler_t *compiler);
 void ReadAsmFile(Str_arr_struct *str_arr);
 void Compile(Compiler_t *compiler);
 commands_t ReadCommand(const char command[MAX_CMD_LEN]);
+void ReadPushArg(Compiler_t *compiler, size_t *str_ind);
+void ReadPopArg(Compiler_t *compiler, size_t *str_ind);
 int JumpArg(const char *string, int num_of_labels, const Label_t *labels);
 
 #endif

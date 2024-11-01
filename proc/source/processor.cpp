@@ -11,7 +11,7 @@ int main()
     ReadFile("../program_code.txt", &SPU);
 
     //SPU_Dump(&SPU);
-
+    //printf("%d\n", SPU.RAM[0]);
     Run(&SPU);
     DUMP(&SPU.stack, 0);
 
