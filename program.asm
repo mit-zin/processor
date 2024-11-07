@@ -1,15 +1,20 @@
-push 42
+push 1
 pop r1
-push r1
-push r1
-push r1
-pop [0]
-pop [1]
-pop [2]
-push 13
+in
+next
 pop r0
-push 42
 push r0
-out
+push 1
+jbe end
+push r0
+push r1
+mul
+pop r1
+push r0
+push 1
+sub
+jmp next
+end
+push r1
 out
 hlt

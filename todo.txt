@@ -10,3 +10,15 @@ assert(0) -> msg abort()
 // #define CANARY(...) __VA_ARGS__
 //
 // #define HASH_ON
+
+
+f(10)
+
+f(int x)
+{
+    if (x == 1) return x;
+    int mul = f(x-1);
+    return x*mul;
+}
+
+//%4

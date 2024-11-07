@@ -23,7 +23,7 @@ void ReadFile(const char *file_name, SPU_t *SPU)
     assert(input);
 
     int size = 0;
-    fread(&size, sizeof(int), 1, input);
+    fread(&size, sizeof(int), 1, input);//TODO: ONEGIN
     SPU->code_size = (size_t) size;
 
     SPU->code = (int *) calloc(SPU->code_size, sizeof(int));
@@ -42,11 +42,11 @@ errors_t SPU_Dump(SPU_t *SPU)
     static bool first_file_opening = true;
     if (first_file_opening)
     {
-        dump_out = fopen("./SPU_dump.txt", "w");
+        dump_out = fopen("./SPU_dump.txt", "w"); //TODO: MAGIC_STRING
         first_file_opening = false;
     }
     else
-        dump_out = fopen("./SPU_dump.txt", "a");
+        dump_out = fopen("./SPU_dump.txt", "a"); //TODO: MAGIC_STRING
     if (!dump_out)
         return FILE_NULL_PTR;
 
@@ -92,7 +92,7 @@ void Run(SPU_t *SPU)
     assert(SPU);
 
     bool hlt_flag = false;
-
+    // a < b and !x
     while (SPU->ip < SPU->code_size && !hlt_flag)
     {
         switch (SPU->code[SPU->ip++])
@@ -106,10 +106,10 @@ void Run(SPU_t *SPU)
                 stack_elem_t popped_elem = 0;
                 assert(!StackPop(&SPU->stack, &popped_elem));
                 int arg_type = SPU->code[SPU->ip++];
-                printf("%d\n", SPU->RAM[SPU->code[SPU->ip]]);
+                //printf("%d\n", SPU->RAM[SPU->code[SPU->ip]]);
                 if (arg_type & 4)
                 {
-                    if (arg_type & 1)
+                    if (arg_type & 1) //TODO: MAGIC
                         SPU->RAM[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
                     else if (arg_type & 2)
                         SPU->RAM[SPU->registers[SPU->code[SPU->ip++]] / PRECISION] =
@@ -269,6 +269,7 @@ void Run(SPU_t *SPU)
     }
 }
 
+
 stack_elem_t GetArg(SPU_t *SPU)
 {
     assert(SPU);
@@ -276,7 +277,7 @@ stack_elem_t GetArg(SPU_t *SPU)
     int arg_type = SPU->code[SPU->ip++];
     int res = SPU->code[SPU->ip++];
 
-    if (arg_type & 2)
+    if (arg_type & 2)//TODO: MASK_MEM MASK_ARG
         res = SPU->registers[res];
     if (arg_type & 4)
     {

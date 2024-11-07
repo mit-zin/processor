@@ -86,7 +86,7 @@ static errors_t StackRecalloc(Stack_t *stack)
     if (stack->size == stack->capacity)
     {
         stack->data = (stack_elem_t *) Recalloc(stack->data,
-            (stack->capacity ON_DEBUG(+ 2)) * sizeof(stack_elem_t),
+            stack->capacity ON_DEBUG(+ 2),
             stack->capacity * STACK_RECALLOC_COEF ON_DEBUG(+ 2), sizeof(stack_elem_t));
 
         FillPoison(stack->data + stack->capacity ON_DEBUG(+ 1),
@@ -97,7 +97,7 @@ static errors_t StackRecalloc(Stack_t *stack)
     else if (stack->size < stack->capacity / STACK_RECALLOC_COEF)
     {
         stack->data = (stack_elem_t *) Recalloc(stack->data,
-            (stack->capacity ON_DEBUG(+ 2)) * sizeof(stack_elem_t),
+            stack->capacity ON_DEBUG(+ 2),
             stack->capacity / STACK_RECALLOC_COEF ON_DEBUG(+ 2), sizeof(stack_elem_t));
 
         stack->capacity /= STACK_RECALLOC_COEF;

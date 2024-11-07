@@ -42,12 +42,19 @@ typedef enum
     JNE
 } commands_t;
 
+typedef enum
+{
+    NUMBER = 1,
+    REGISTER = 2,
+    RAM      = 4
+} Arg_t;
+
 const int PRECISION = 100;
 
 const int RECALLOC_COEF = 2;
 const int STACK_RECALLOC_COEF = 2;
 const int CODE_RECALLOC_COEF = 2;
 
-void *Recalloc(void *data, size_t data_size_bytes, size_t number, size_t size);
+void *Recalloc(void *data, size_t prev_size, size_t new_size, size_t elem_size);
 
 #endif

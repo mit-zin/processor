@@ -4,8 +4,6 @@
 #include "../../common.h"
 #include "stack.h"
 
-
-
 const int CANARY = (stack_elem_t) 0XB00B5;
 
 typedef enum

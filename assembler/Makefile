@@ -10,14 +10,30 @@ FLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-o
 	-Wno-missing-field-initializers -Wno-narrowing -Wno-old-style-cast -Wno-varargs\
 	-Wstack-protector -fcheck-new -fsized-deallocation -fstack-protector -fstrict-overflow\
 	-flto-odr-type-merging -fno-omit-frame-pointer -Wlarger-than=8192 -Wstack-usage=8192 -pie\
-	-fPIE -Werror=vla -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
+	-fPIE -Werror=vla -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,$\
+	float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,$\
+	return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,$\
+	vla-bound,vptr
 
-assem: assembler.o compiler.o ../common.o
-	g++ $(FLAGS) assembler.o compiler.o ../common.o -o assem
+INCL=-I./include/
 
-assembler.o: assembler.cpp
-	g++ $(FLAGS) -c assembler.cpp
+OBJ_DIR=./objects/
 
-compiler.o: compiler.cpp
-	g++ $(FLAGS) -c compiler.cpp
+SRC_DIR=./source/
+
+GPP=g++ $(FLAGS) $(INCL)
+
+OBJECTS=$(OBJ_DIR)assembler.o $(OBJ_DIR)read_funcs.o $(OBJ_DIR)compiler.o ../common.o
+
+assem: $(OBJECTS)
+	$(GPP) $(OBJECTS) -o assem
+
+$(OBJ_DIR)assembler.o: $(SRC_DIR)assembler.cpp
+	$(GPP) -c $(SRC_DIR)assembler.cpp -o $(OBJ_DIR)assembler.o
+
+$(OBJ_DIR)read_funcs.o: $(SRC_DIR)read_funcs.cpp
+	$(GPP) -c $(SRC_DIR)read_funcs.cpp -o $(OBJ_DIR)read_funcs.o
+
+$(OBJ_DIR)compiler.o: $(SRC_DIR)compiler.cpp
+	$(GPP) -c $(SRC_DIR)compiler.cpp -o $(OBJ_DIR)compiler.o
 

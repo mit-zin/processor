@@ -11,7 +11,7 @@ errors_t Dump(Stack_t *stack, ON_DEBUG(unsigned int stk_errors,) const char *fil
     static bool first_file_opening = true;
     if (first_file_opening)
     {
-        dump_out = fopen("./dump.txt", "w");
+        dump_out = fopen("./dump.txt", "w"); //TODO: MAGIC STRING
         first_file_opening = false;
     }
     else
