@@ -6,6 +6,8 @@
 
 const size_t INITIAL_CAPACITY = 30;
 
+const char *SPU_DUMP_FILE = "./SPU_dump.txt";
+
 void     CreateSPU (SPU_t *SPU);
 void     DestroySPU(SPU_t *SPU);
 void     ReadFile  (const char *filename, SPU_t *SPU);

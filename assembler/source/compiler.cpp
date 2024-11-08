@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +74,13 @@ void WriteInFile(Compiler_t *compiler)
 
         while (sscanf(compiler->buffer + offset, "%s%n", command, &chrs_scanned) > 0)
         {
-            offset += chrs_scanned;
+            comment_t res = SkipCommentAftCmd(compiler, &offset, command);
+            if (res == STARTS_WITH_COMMENT)
+                continue;
+            else if (res == NO_COMMENTS)
+                offset += chrs_scanned;
+
+            ON_ASM_DBG(printf("%s\n", command);)
 
             if (compiler->code_size - compiler->ip < MIN_DIFFERENCE)
             {
@@ -93,80 +100,87 @@ void WriteInFile(Compiler_t *compiler)
 
             switch(ReadCommand(command))
             {
-            case PUSH:
-                compiler->code[compiler->ip++] = PUSH;
-                ReadPushArg(compiler, &offset);
-                break;
-            case POP :
-            {
-                compiler->code[compiler->ip++] = POP;
-                ReadPopArg(compiler, &offset);
-                break;
-            }
-            case ADD :
-                compiler->code[compiler->ip++] = ADD;
-                break;
-            case SUB :
-                compiler->code[compiler->ip++] = SUB;
-                break;
-            case MUL :
-                compiler->code[compiler->ip++] = MUL;
-                break;
-            case DIV :
-                compiler->code[compiler->ip++] = DIV;
-                break;
-            case OUT :
-                compiler->code[compiler->ip++] = OUT;
-                break;
-            case IN :
-                compiler->code[compiler->ip++] = IN;
-                break;
-            case SQRT :
-                compiler->code[compiler->ip++] = SQRT;
-                break;
-            case SIN :
-                compiler->code[compiler->ip++] = SIN;
-                break;
-            case COS :
-                compiler->code[compiler->ip++] = COS;
-                break;
-            case DUMP :
-                compiler->code[compiler->ip++] = DUMP;
-                break;
-            case HLT :
-                compiler->code[compiler->ip++] = HLT;
-                break;
-            case JMP :
-                compiler->code[compiler->ip++] = JMP;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            case JA :
-                compiler->code[compiler->ip++] = JA;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            case JAE :
-                compiler->code[compiler->ip++] = JAE;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            case JB :
-                compiler->code[compiler->ip++] = JB;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            case JBE :
-                compiler->code[compiler->ip++] = JBE;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            case JE :
-                compiler->code[compiler->ip++] = JE;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            case JNE :
-                compiler->code[compiler->ip++] = JNE;
-                compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
-                break;
-            default :
-                strcpy(compiler->labels[compiler->labels_num].name, command);
-                compiler->labels[compiler->labels_num++].adres = compiler->ip - 1;
+                case PUSH:
+                    compiler->code[compiler->ip++] = PUSH;
+                    ReadPushArg(compiler, &offset);
+                    break;
+                case POP :
+                    compiler->code[compiler->ip++] = POP;
+                    ReadPopArg(compiler, &offset);
+                    break;
+                case ADD :
+                    compiler->code[compiler->ip++] = ADD;
+                    break;
+                case SUB :
+                    compiler->code[compiler->ip++] = SUB;
+                    break;
+                case MUL :
+                    compiler->code[compiler->ip++] = MUL;
+                    break;
+                case DIV :
+                    compiler->code[compiler->ip++] = DIV;
+                    break;
+                case OUT :
+                    compiler->code[compiler->ip++] = OUT;
+                    break;
+                case IN :
+                    compiler->code[compiler->ip++] = IN;
+                    break;
+                case SQRT :
+                    compiler->code[compiler->ip++] = SQRT;
+                    break;
+                case SIN :
+                    compiler->code[compiler->ip++] = SIN;
+                    break;
+                case COS :
+                    compiler->code[compiler->ip++] = COS;
+                    break;
+                case DUMP :
+                    compiler->code[compiler->ip++] = DUMP;
+                    break;
+                case HLT :
+                    compiler->code[compiler->ip++] = HLT;
+                    break;
+                case JMP :
+                    compiler->code[compiler->ip++] = JMP;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case JA :
+                    compiler->code[compiler->ip++] = JA;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case JAE :
+                    compiler->code[compiler->ip++] = JAE;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case JB :
+                    compiler->code[compiler->ip++] = JB;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case JBE :
+                    compiler->code[compiler->ip++] = JBE;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case JE :
+                    compiler->code[compiler->ip++] = JE;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case JNE :
+                    compiler->code[compiler->ip++] = JNE;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case CALL :
+                    compiler->code[compiler->ip++] = CALL;
+                    compiler->code[compiler->ip++] = ReadJumpArg(compiler, &offset);
+                    break;
+                case RET :
+                    compiler->code[compiler->ip++] = RET;
+                    break;
+                default :
+                    if (strchr(command, ':') != NULL)
+                        *strchr(command, ':') = '\0';
+                    strcpy(compiler->labels[compiler->labels_num].name, command);
+                    compiler->labels[compiler->labels_num++].adres = compiler->ip - 1;
             }
 
             memset(command, '\0', MAX_CMD_LEN);

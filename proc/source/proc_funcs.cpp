@@ -42,11 +42,11 @@ errors_t SPU_Dump(SPU_t *SPU)
     static bool first_file_opening = true;
     if (first_file_opening)
     {
-        dump_out = fopen("./SPU_dump.txt", "w"); //TODO: MAGIC_STRING
+        dump_out = fopen(SPU_DUMP_FILE, "w"); //TODO: MAGIC_STRING
         first_file_opening = false;
     }
     else
-        dump_out = fopen("./SPU_dump.txt", "a"); //TODO: MAGIC_STRING
+        dump_out = fopen(SPU_DUMP_FILE, "a"); //TODO: MAGIC_STRING
     if (!dump_out)
         return FILE_NULL_PTR;
 
@@ -91,6 +91,9 @@ void Run(SPU_t *SPU)
 {
     assert(SPU);
 
+    Stack_t call_stack = {};
+    CreateStack(&call_stack, INITIAL_CAPACITY);
+
     bool hlt_flag = false;
     // a < b and !x
     while (SPU->ip < SPU->code_size && !hlt_flag)
@@ -99,25 +102,23 @@ void Run(SPU_t *SPU)
         {
             case PUSH :
                 assert(!StackPush(&SPU->stack, GetArg(SPU)));
-
                 break;
             case POP :
             {
                 stack_elem_t popped_elem = 0;
                 assert(!StackPop(&SPU->stack, &popped_elem));
                 int arg_type = SPU->code[SPU->ip++];
-                //printf("%d\n", SPU->RAM[SPU->code[SPU->ip]]);
-                if (arg_type & 4)
+
+                if (arg_type & RAM)
                 {
-                    if (arg_type & 1) //TODO: MAGIC
+                    if (arg_type & NUMBER) //TODO: MAGIC
                         SPU->RAM[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
-                    else if (arg_type & 2)
+                    else if (arg_type & REGISTER)
                         SPU->RAM[SPU->registers[SPU->code[SPU->ip++]] / PRECISION] =
                             (int) (PRECISION * popped_elem);
                 }
                 else
                     SPU->registers[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
-
 
                 break;
             }
@@ -263,10 +264,23 @@ void Run(SPU_t *SPU)
                     SPU->ip++;
                 break;
             }
+            case CALL :
+                assert(!StackPush(&call_stack, (stack_elem_t)(SPU->ip + 1)));
+                SPU->ip = SPU->code[SPU->ip];
+                break;
+            case RET :
+            {
+                stack_elem_t popped_elem = 0;
+                assert(!StackPop(&call_stack, &popped_elem));
+                SPU->ip = (size_t) popped_elem;
+                break;
+            }
             default :
                 printf("Error: default case. ip=%d, code[ip]=%d\n", SPU->ip - 1, SPU->code[SPU->ip-1]);
         }
     }
+
+    DestroyStack(&call_stack);
 }
 
 
@@ -277,9 +291,9 @@ stack_elem_t GetArg(SPU_t *SPU)
     int arg_type = SPU->code[SPU->ip++];
     int res = SPU->code[SPU->ip++];
 
-    if (arg_type & 2)//TODO: MASK_MEM MASK_ARG
+    if (arg_type & REGISTER)//TODO: MASK_MEM MASK_ARG
         res = SPU->registers[res];
-    if (arg_type & 4)
+    if (arg_type & RAM)
     {
         res = SPU->RAM[res / PRECISION];
     }
@@ -296,6 +310,8 @@ void DestroySPU(SPU_t *SPU)
     SPU->ip = 0;
     for (size_t i = 0; i < NUM_OF_REGISTERS; i++)
         SPU->registers[i] = 0;
+    for (size_t i = 0; i < SIZE_OF_RAM; i++)
+        SPU->RAM[i] = 0;
 
     DestroyStack(&SPU->stack);
 }

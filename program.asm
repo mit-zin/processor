@@ -1,20 +1,26 @@
+*
+тестовая
+программа
+*
+push 41
 push 1
-pop r1
-in
-next
+add
+push 42
+call fun
+push 5
 pop r0
 push r0
-push 1
-jbe end
 push r0
-push r1
-mul
-pop r1
 push r0
-push 1
-sub
-jmp next
-end
-push r1
+div
+mul;
 out
 hlt
+
+fun:
+    out;выводит 42
+    out*
+    выводит
+    42
+    *
+    ret; anton loh

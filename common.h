@@ -19,7 +19,7 @@ const int CODE_POISON = -1;
 
 typedef enum
 {
-   NOT_COMMAND = 0,
+    NOT_COMMAND = 0,
     PUSH = 1,
     POP,
     ADD,
@@ -39,7 +39,9 @@ typedef enum
     JB,
     JBE,
     JE,
-    JNE
+    JNE,
+    CALL,
+    RET
 } commands_t;
 
 typedef enum
@@ -47,7 +49,7 @@ typedef enum
     NUMBER = 1,
     REGISTER = 2,
     RAM      = 4
-} Arg_t;
+} arg_t;
 
 const int PRECISION = 100;
 
