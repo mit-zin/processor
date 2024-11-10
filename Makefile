@@ -15,11 +15,33 @@ FLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-o
 	integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,$\
 	shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
+all: asm prc common.o
 
+asm:
+	cd assembler && make
+
+prc:
+	cd proc && make
 
 common.o: common.cpp
 	g++ $(FLAGS) -c common.cpp
 
-run:
-	./asm $(INPUT) code.bin
-	./cpu code.bin
+run: run_assem run_spu
+
+run_assem:
+	cd assembler && ./assem
+
+run_spu:
+	cd proc && ./spu
+
+RUN_ASM=cd assembler && ./assem -input
+
+run_assem_fac:
+	$(RUN_ASM) ../factorial.asm
+
+run_assem_sqsol:
+	$(RUN_ASM) ../sq_solver.asm
+
+run_assem_circle:
+	$(RUN_ASM) ../circle.asm
+

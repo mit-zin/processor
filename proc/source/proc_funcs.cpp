@@ -6,49 +6,59 @@
 
 #include "proc_funcs.h"
 
-
-void CreateSPU(SPU_t *SPU)
+errors_t CreateSPU(SPU_t *SPU)
 {
-    assert(SPU);
+    MY_ASSERT(SPU, "Null pointer given as argument.", return ARG_NULL_PTR);
 
-    CreateStack(&SPU->stack, INITIAL_CAPACITY);
+
+    SPU->RAM = (int *) calloc(SIZE_OF_RAM, sizeof(int));
+    MY_ASSERT(SPU->RAM, "Allocation failed.", return NULL_PTR);
+
+    for (int i = 0; i < SIZE_OF_RAM; i++)
+        SPU->RAM[i] = 0;
+
+    errors_t res = CreateStack(&SPU->stack, INITIAL_CAPACITY);
+    if (res) return res;
+
+    return SUCCESS;
 }
 
-void ReadFile(const char *file_name, SPU_t *SPU)
+errors_t ReadFile(const char *file_name, SPU_t *SPU)
 {
-    assert(file_name);
-    assert(SPU);
+    MY_ASSERT(file_name, "Null pointer given as argument.", return ARG_NULL_PTR);
+    MY_ASSERT(SPU, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     FILE *input = fopen(file_name, "rb");
-    assert(input);
+    MY_ASSERT(input, "File opening error.", return FILE_NULL_PTR);
 
     int size = 0;
-    fread(&size, sizeof(int), 1, input);//TODO: ONEGIN
+    fread(&size, sizeof(int), 1, input);
     SPU->code_size = (size_t) size;
 
     SPU->code = (int *) calloc(SPU->code_size, sizeof(int));
-    assert(SPU->code);
+    MY_ASSERT(SPU->code, "Allocation failed.", fclose(input); return NULL_PTR);
 
     fread(SPU->code, sizeof(int), SPU->code_size, input);
 
     fclose(input);
+
+    return SUCCESS;
 }
 
 errors_t SPU_Dump(SPU_t *SPU)
 {
-    assert(SPU);
+    MY_ASSERT(SPU, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     FILE *dump_out = 0;
     static bool first_file_opening = true;
     if (first_file_opening)
     {
-        dump_out = fopen(SPU_DUMP_FILE, "w"); //TODO: MAGIC_STRING
+        dump_out = fopen(SPU_DUMP_FILE, "w");
         first_file_opening = false;
     }
     else
-        dump_out = fopen(SPU_DUMP_FILE, "a"); //TODO: MAGIC_STRING
-    if (!dump_out)
-        return FILE_NULL_PTR;
+        dump_out = fopen(SPU_DUMP_FILE, "a");
+    MY_ASSERT(dump_out, "File opening error.", return FILE_NULL_PTR);
 
     if (!SPU->code)
         fprintf(dump_out, "Error: code null ptr.\n");
@@ -87,31 +97,34 @@ errors_t SPU_Dump(SPU_t *SPU)
     return SUCCESS;
 }
 
-void Run(SPU_t *SPU)
+errors_t Run(SPU_t *SPU)
 {
-    assert(SPU);
+    MY_ASSERT(SPU, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     Stack_t call_stack = {};
-    CreateStack(&call_stack, INITIAL_CAPACITY);
+    errors_t res = CreateStack(&call_stack, INITIAL_CAPACITY);
+    if (res)
+        return res;
 
     bool hlt_flag = false;
-    // a < b and !x
     while (SPU->ip < SPU->code_size && !hlt_flag)
     {
         switch (SPU->code[SPU->ip++])
         {
             case PUSH :
-                assert(!StackPush(&SPU->stack, GetArg(SPU)));
+                res = StackPush(&SPU->stack, GetArg(SPU));
+                if (res) return res;
                 break;
             case POP :
             {
                 stack_elem_t popped_elem = 0;
-                assert(!StackPop(&SPU->stack, &popped_elem));
+                res = StackPop(&SPU->stack, &popped_elem);
+                if (res) return res;
                 int arg_type = SPU->code[SPU->ip++];
 
                 if (arg_type & RAM)
                 {
-                    if (arg_type & NUMBER) //TODO: MAGIC
+                    if (arg_type & NUMBER) //TODO:  MAGIC
                         SPU->RAM[SPU->code[SPU->ip++]] = (int) (PRECISION * popped_elem);
                     else if (arg_type & REGISTER)
                         SPU->RAM[SPU->registers[SPU->code[SPU->ip++]] / PRECISION] =
@@ -125,72 +138,94 @@ void Run(SPU_t *SPU)
             case ADD :
             {
                 stack_elem_t popped_elem1 = 0, popped_elem2 = 0;
-                StackPop(&SPU->stack, &popped_elem1);
-                StackPop(&SPU->stack, &popped_elem2);
-                StackPush(&SPU->stack, popped_elem1 + popped_elem2);
+                res = StackPop(&SPU->stack, &popped_elem1);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &popped_elem2);
+                if (res) return res;
+                res = StackPush(&SPU->stack, popped_elem1 + popped_elem2);
+                if (res) return res;
                 break;
             }
             case SUB :
             {
                 stack_elem_t popped_elem1 = 0, popped_elem2 = 0;
-                StackPop(&SPU->stack, &popped_elem1);
-                StackPop(&SPU->stack, &popped_elem2);
-                StackPush(&SPU->stack, popped_elem2 - popped_elem1);
+                res = StackPop(&SPU->stack, &popped_elem1);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &popped_elem2);
+                if (res) return res;
+                res = StackPush(&SPU->stack, popped_elem2 - popped_elem1);
+                if (res) return res;
                 break;
             }
             case MUL :
             {
                 stack_elem_t popped_elem1 = 0, popped_elem2 = 0;
-                StackPop(&SPU->stack, &popped_elem1);
-                StackPop(&SPU->stack, &popped_elem2);
-                StackPush(&SPU->stack, popped_elem1 * popped_elem2);
+                res = StackPop(&SPU->stack, &popped_elem1);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &popped_elem2);
+                if (res) return res;
+                res = StackPush(&SPU->stack, popped_elem1 * popped_elem2);
+                if (res) return res;
                 break;
             }
             case DIV :
             {
                 stack_elem_t popped_elem1 = 0, popped_elem2 = 0;
-                StackPop(&SPU->stack, &popped_elem1);
-                StackPop(&SPU->stack, &popped_elem2);
-                StackPush(&SPU->stack, popped_elem2 / popped_elem1);
+                res = StackPop(&SPU->stack, &popped_elem1);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &popped_elem2);
+                if (res) return res;
+                res = StackPush(&SPU->stack, popped_elem2 / popped_elem1);
+                if (res) return res;
                 break;
             }
             case OUT :
             {
                 stack_elem_t popped_elem = 0;
-                StackPop(&SPU->stack, &popped_elem);
-                printf("%f\n", popped_elem);
+                res = StackPop(&SPU->stack, &popped_elem);
+                if (res) return res;
+                printf("%g\n", popped_elem);
                 break;
             }
             case IN :
             {
                 stack_elem_t pushed_elem = 0;
-                scanf("%lf", &pushed_elem);
-                StackPush(&SPU->stack, pushed_elem);
+                if (!scanf("%lf", &pushed_elem))
+                    return SCAN_ERROR;
+                res = StackPush(&SPU->stack, pushed_elem);
+                if (res) return res;
                 break;
             }
             case SQRT :
             {
                 stack_elem_t popped_elem = 0;
-                StackPop(&SPU->stack, &popped_elem);
-                StackPush(&SPU->stack, sqrt(popped_elem));
+                res = StackPop(&SPU->stack, &popped_elem);
+                if (res) return res;
+                res = StackPush(&SPU->stack, sqrt(popped_elem));
+                if (res) return res;
                 break;
             }
             case SIN :
             {
                 stack_elem_t popped_elem = 0;
-                StackPop(&SPU->stack, &popped_elem);
-                StackPush(&SPU->stack, sin(popped_elem));
+                res = StackPop(&SPU->stack, &popped_elem);
+                if (res) return res;
+                res = StackPush(&SPU->stack, sin(popped_elem));
+                if (res) return res;
                 break;
             }
             case COS :
             {
                 stack_elem_t popped_elem = 0;
-                StackPop(&SPU->stack, &popped_elem);
-                StackPush(&SPU->stack, cos(popped_elem));
+                res = StackPop(&SPU->stack, &popped_elem);
+                if (res) return res;
+                res = StackPush(&SPU->stack, cos(popped_elem));
+                if (res) return res;
                 break;
             }
             case DUMP :
-                SPU_Dump(SPU);
+                res = SPU_Dump(SPU);
+                if (res) return res;
                 break;
             case HLT :
                 hlt_flag = true;
@@ -201,8 +236,11 @@ void Run(SPU_t *SPU)
             case JA :
             {
                 stack_elem_t b_elem = 0, a_elem = 0;
-                assert(!StackPop(&SPU->stack, &b_elem));
-                assert(!StackPop(&SPU->stack, &a_elem));
+                res = StackPop(&SPU->stack, &b_elem);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &a_elem);
+                if (res) return res;
+
                 if (a_elem > b_elem)
                     SPU->ip = SPU->code[SPU->ip];
                 else
@@ -212,8 +250,11 @@ void Run(SPU_t *SPU)
             case JAE :
             {
                 stack_elem_t b_elem = 0, a_elem = 0;
-                assert(!StackPop(&SPU->stack, &b_elem));
-                assert(!StackPop(&SPU->stack, &a_elem));
+                res = StackPop(&SPU->stack, &b_elem);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &a_elem);
+                if (res) return res;
+
                 if (a_elem >= b_elem)
                     SPU->ip = SPU->code[SPU->ip];
                 else
@@ -223,8 +264,11 @@ void Run(SPU_t *SPU)
             case JB :
             {
                 stack_elem_t b_elem = 0, a_elem = 0;
-                assert(!StackPop(&SPU->stack, &b_elem));
-                assert(!StackPop(&SPU->stack, &a_elem));
+                res = StackPop(&SPU->stack, &b_elem);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &a_elem);
+                if (res) return res;
+
                 if (a_elem < b_elem)
                     SPU->ip = SPU->code[SPU->ip];
                 else
@@ -234,8 +278,11 @@ void Run(SPU_t *SPU)
             case JBE :
             {
                 stack_elem_t b_elem = 0, a_elem = 0;
-                assert(!StackPop(&SPU->stack, &b_elem));
-                assert(!StackPop(&SPU->stack, &a_elem));
+                res = StackPop(&SPU->stack, &b_elem);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &a_elem);
+                if (res) return res;
+
                 if (a_elem <= b_elem)
                     SPU->ip = SPU->code[SPU->ip];
                 else
@@ -245,8 +292,10 @@ void Run(SPU_t *SPU)
             case JE :
             {
                 stack_elem_t b_elem = 0, a_elem = 0;
-                assert(!StackPop(&SPU->stack, &b_elem));
-                assert(!StackPop(&SPU->stack, &a_elem));
+                res = StackPop(&SPU->stack, &b_elem);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &a_elem);
+                if (res) return res;
                 if (a_elem == b_elem)
                     SPU->ip = SPU->code[SPU->ip];
                 else
@@ -256,8 +305,10 @@ void Run(SPU_t *SPU)
             case JNE :
             {
                 stack_elem_t b_elem = 0, a_elem = 0;
-                assert(!StackPop(&SPU->stack, &b_elem));
-                assert(!StackPop(&SPU->stack, &a_elem));
+                res = StackPop(&SPU->stack, &b_elem);
+                if (res) return res;
+                res = StackPop(&SPU->stack, &a_elem);
+                if (res) return res;
                 if (a_elem != b_elem)
                     SPU->ip = SPU->code[SPU->ip];
                 else
@@ -265,14 +316,24 @@ void Run(SPU_t *SPU)
                 break;
             }
             case CALL :
-                assert(!StackPush(&call_stack, (stack_elem_t)(SPU->ip + 1)));
+                res = StackPush(&call_stack, (stack_elem_t)(SPU->ip + 1));
+                if (res) return res;
                 SPU->ip = SPU->code[SPU->ip];
                 break;
             case RET :
             {
                 stack_elem_t popped_elem = 0;
-                assert(!StackPop(&call_stack, &popped_elem));
+                res = StackPop(&call_stack, &popped_elem);
+                if (res) return res;
                 SPU->ip = (size_t) popped_elem;
+                break;
+            }
+            case CHR :
+            {
+                stack_elem_t popped_elem = 0;
+                res = StackPop(&SPU->stack, &popped_elem);
+                if (res) return res;
+                printf("%c", (char) popped_elem);
                 break;
             }
             default :
@@ -281,17 +342,19 @@ void Run(SPU_t *SPU)
     }
 
     DestroyStack(&call_stack);
+
+    return SUCCESS;
 }
 
 
 stack_elem_t GetArg(SPU_t *SPU)
 {
-    assert(SPU);
+    MY_ASSERT(SPU, "Null pointer given as argument.", exit(EXIT_FAILURE));
 
     int arg_type = SPU->code[SPU->ip++];
     int res = SPU->code[SPU->ip++];
 
-    if (arg_type & REGISTER)//TODO: MASK_MEM MASK_ARG
+    if (arg_type & REGISTER)//TODO: MASK_MEM MASK_ARg
         res = SPU->registers[res];
     if (arg_type & RAM)
     {
@@ -301,9 +364,9 @@ stack_elem_t GetArg(SPU_t *SPU)
     return ((stack_elem_t) res) / PRECISION;
 }
 
-void DestroySPU(SPU_t *SPU)
+errors_t DestroySPU(SPU_t *SPU)
 {
-    assert(SPU);
+    MY_ASSERT(SPU, "Null poiner given as argument.", return ARG_NULL_PTR);
 
     free(SPU->code);
     SPU->code_size = 0;
@@ -313,5 +376,9 @@ void DestroySPU(SPU_t *SPU)
     for (size_t i = 0; i < SIZE_OF_RAM; i++)
         SPU->RAM[i] = 0;
 
+    free(SPU->RAM);
+
     DestroyStack(&SPU->stack);
+
+    return SUCCESS;
 }

@@ -21,7 +21,7 @@
                               [HLT] = "hlt"};*/
 
 const int NUM_OF_REGISTERS = 16;
-const int SIZE_OF_RAM      = 900;
+const int SIZE_OF_RAM      = 2601;
 
 typedef struct
 {
@@ -30,7 +30,7 @@ typedef struct
     size_t ip;
     Stack_t stack;
     int registers[NUM_OF_REGISTERS];
-    int RAM[SIZE_OF_RAM];
+    int *RAM;
 } SPU_t;
 
 #endif

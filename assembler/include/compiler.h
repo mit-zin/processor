@@ -8,11 +8,11 @@ const size_t MIN_SIZE = 50;
 const size_t NUM_OF_ITERATIONS = 2;
 const int MIN_DIFFERENCE = 3;
 
-void CreateCompiler (Compiler_t *compiler);
-void DestroyCompiler(Compiler_t *compiler);
+errors_t CreateCompiler (Compiler_t *compiler, const char *out_file_name);
+errors_t DestroyCompiler(Compiler_t *compiler);
 
-void ReadAsmFile(Compiler_t *compiler);
+errors_t ReadAsmFile(Compiler_t *compiler, const char *file_name);
 
-void WriteInFile(Compiler_t *compiler);
+errors_t WriteInFile(Compiler_t *compiler);
 
 #endif

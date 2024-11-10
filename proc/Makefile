@@ -23,8 +23,8 @@ SRC_DIR=./source/
 
 GPP=g++ $(FLAGS) $(INCL)
 
-OBJECTS=$(OBJ_DIR)processor.o $(OBJ_DIR)verify_funcs.o $(OBJ_DIR)stack_funcs.o\
-	$(OBJ_DIR)proc_funcs.o ../common.o
+OBJECTS=$(OBJ_DIR)verify_funcs.o $(OBJ_DIR)stack_funcs.o\
+	$(OBJ_DIR)proc_funcs.o ../common.o $(OBJ_DIR)processor.o
 
 spu: $(OBJECTS)
 	$(GPP) $(OBJECTS) -o spu

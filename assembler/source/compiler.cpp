@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,62 +7,71 @@
 
 #include "compiler.h"
 
-void CreateCompiler(Compiler_t *compiler)
+errors_t CreateCompiler(Compiler_t *compiler, const char *out_file_name)
 {
-    assert(compiler);
+    MY_ASSERT(compiler, "Null pointer given as argument.", return ARG_NULL_PTR);
+    MY_ASSERT(out_file_name, "Null pointer given as argument.", return ARG_NULL_PTR);
 
-    compiler->output = fopen("../program_code.txt", "wb");
+    compiler->output = fopen(out_file_name, "wb");
+    MY_ASSERT(compiler->output, "File opening error.", return FILE_NULL_PTR);
 
     compiler->code_size = MIN_SIZE;
 
     compiler->code = (int *) calloc(MIN_SIZE, sizeof(int));
-    assert(compiler->code);
+    MY_ASSERT(compiler->code, "Allocation failed.", return NULL_PTR);
 
     for (size_t i = 0; i < MIN_SIZE; i++)
         compiler->code[i] = CODE_POISON;
 
     compiler->labels = (Label_t *) calloc(INIT_LBLS_SIZE, sizeof(Label_t));
-    assert(compiler->labels);
+    MY_ASSERT(compiler->labels, "Allocation failed.", return NULL_PTR);
     compiler->labels_num = 0;
     compiler->labels_size = INIT_LBLS_SIZE;
+
+    return SUCCESS;
 }
 
-void DestroyCompiler(Compiler_t *compiler)
+errors_t DestroyCompiler(Compiler_t *compiler)
 {
-    assert(compiler);
+    MY_ASSERT(compiler, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     free(compiler->code);
     free(compiler->buffer);
     free(compiler->labels);
 
     fclose(compiler->output);
+
+    return SUCCESS;
 }
 
-void ReadAsmFile(Compiler_t *compiler)
+errors_t ReadAsmFile(Compiler_t *compiler, const char *file_name)
 {
-    assert(compiler);
+    MY_ASSERT(compiler, "Null pointer given as argument.", return ARG_NULL_PTR);
+    MY_ASSERT(file_name, "Null pointer given as argument.", return ARG_NULL_PTR);
 
-    FILE *input = fopen("../program.asm", "rb");
-    assert(input);
+    FILE *input = fopen(file_name, "rb");
+    MY_ASSERT(input, "File opening error.", return FILE_NULL_PTR);
 
     struct stat stbuf = {};
-    stat("../program.asm", &stbuf);
+    stat(file_name, &stbuf);
 
     compiler->buf_size = stbuf.st_size + 1;
 
     compiler->buffer = (char *) calloc(compiler->buf_size, sizeof(char));
-    assert(compiler->buffer);
+    MY_ASSERT(compiler->buffer, "Allocation failed.", fclose(input); return NULL_PTR);
 
     fread(compiler->buffer, sizeof(char), compiler->buf_size - 1, input);
 
     compiler->buffer[compiler->buf_size - 1] = '\0';
 
     fclose(input);
+
+    return SUCCESS;
 }
 
-void WriteInFile(Compiler_t *compiler)
+errors_t WriteInFile(Compiler_t *compiler)
 {
-    assert(compiler);
+    MY_ASSERT(compiler, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     compiler->ip = 1;
 
@@ -87,7 +95,8 @@ void WriteInFile(Compiler_t *compiler)
                 compiler->code = (int *) Recalloc(compiler->code, compiler->code_size,
                     compiler->code_size * CODE_RECALLOC_COEF, sizeof(int));
                 compiler->code_size *= CODE_RECALLOC_COEF;
-                assert(compiler->code);
+                if (!compiler->code)
+                    return NULL_PTR;
             }
 
             if (compiler->labels_size - compiler->labels_num < 1)
@@ -95,19 +104,26 @@ void WriteInFile(Compiler_t *compiler)
                 compiler->labels = (Label_t *) Recalloc(compiler->labels, compiler->labels_size,
                     compiler->labels_size * RECALLOC_COEF, sizeof(Label_t));
                 compiler->labels_size *= RECALLOC_COEF;
-                assert(compiler->labels);
+                if (!compiler->labels)
+                    return NULL_PTR;
             }
 
             switch(ReadCommand(command))
             {
                 case PUSH:
+                {
                     compiler->code[compiler->ip++] = PUSH;
-                    ReadPushArg(compiler, &offset);
+                    errors_t result = ReadPushArg(compiler, &offset);
+                    if (result) return result;
                     break;
+                }
                 case POP :
+                {
                     compiler->code[compiler->ip++] = POP;
-                    ReadPopArg(compiler, &offset);
+                    errors_t result = ReadPopArg(compiler, &offset);
+                    if (result) return result;
                     break;
+                }
                 case ADD :
                     compiler->code[compiler->ip++] = ADD;
                     break;
@@ -176,6 +192,9 @@ void WriteInFile(Compiler_t *compiler)
                 case RET :
                     compiler->code[compiler->ip++] = RET;
                     break;
+                case CHR :
+                    compiler->code[compiler->ip++] = CHR;
+                    break;
                 default :
                     if (strchr(command, ':') != NULL)
                         *strchr(command, ':') = '\0';
@@ -192,4 +211,8 @@ void WriteInFile(Compiler_t *compiler)
     compiler->code[0] = compiler->ip - 1;
 
     fwrite(compiler->code, sizeof(int), compiler->ip, compiler->output);
+
+    return SUCCESS;
 }
+
+

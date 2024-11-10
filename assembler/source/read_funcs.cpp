@@ -8,7 +8,7 @@
 
 commands_t ReadCommand(const char command[MAX_CMD_LEN])
 {
-    assert(command);
+    MY_ASSERT(command, "Null pointer given as argument.", exit(EXIT_FAILURE));
 
     if (!strcmp(command, "push"))
         return PUSH;
@@ -54,18 +54,21 @@ commands_t ReadCommand(const char command[MAX_CMD_LEN])
         return CALL;
     if (!strcmp(command, "ret"))
         return RET;
+    if (!strcmp(command, "chr"))
+        return CHR;
 
     return NOT_COMMAND;
 }
 
-void ReadPopArg(Compiler_t *compiler, size_t *offset)
+errors_t ReadPopArg(Compiler_t *compiler, size_t *offset)
 {
-    assert(compiler);
-    assert(offset);
+    MY_ASSERT(compiler, "Null pointer given as argument.", return ARG_NULL_PTR);
+    MY_ASSERT(offset, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     char arg[MAX_CMD_LEN] = {};
     int chrs_scanned = 0;
-    assert(sscanf(compiler->buffer + *offset, "%s%n", arg, &chrs_scanned));
+    if (!sscanf(compiler->buffer + *offset, "%s%n", arg, &chrs_scanned))
+        return SCAN_ERROR;
 
     if (SkipCommentAftArg(compiler, offset, arg) == NO_COMMENTS)
         *offset += chrs_scanned;
@@ -76,29 +79,35 @@ void ReadPopArg(Compiler_t *compiler, size_t *offset)
         if (tolower((int) arg[1]) == 'r')
         {
             compiler->code[compiler->ip++] |= REGISTER;
-            sscanf(arg + 2, "%d]", &compiler->code[compiler->ip++]);
+            if(!sscanf(arg + 2, "%d]", &compiler->code[compiler->ip++]))
+                return SCAN_ERROR;
         }
         else
         {
             compiler->code[compiler->ip++] |= NUMBER;
-            sscanf(arg + 1, "%d]", &compiler->code[compiler->ip++]);
+            if (!sscanf(arg + 1, "%d]", &compiler->code[compiler->ip++]))
+                return SCAN_ERROR;
         }
     }
     else
     {
         compiler->code[compiler->ip++] = REGISTER;
-        sscanf(arg + 1, "%d", &compiler->code[compiler->ip++]);
+        if(!sscanf(arg + 1, "%d", &compiler->code[compiler->ip++]))
+            return SCAN_ERROR;
     }
+
+    return SUCCESS;
 }
 
-void ReadPushArg(Compiler_t *compiler, size_t *offset)
+errors_t ReadPushArg(Compiler_t *compiler, size_t *offset)
 {
-    assert(compiler);
-    assert(offset);
+    MY_ASSERT(compiler, "Null pointer given as argument.", return ARG_NULL_PTR);
+    MY_ASSERT(offset, "Null pointer given as argument.", return ARG_NULL_PTR);
 
     char arg[MAX_CMD_LEN] = {};
     int chrs_scanned = 0;
-    assert(sscanf(compiler->buffer + *offset, "%s%n", arg, &chrs_scanned));
+    if (!sscanf(compiler->buffer + *offset, "%s%n", arg, &chrs_scanned))
+        return SCAN_ERROR;
 
     if (SkipCommentAftArg(compiler, offset, arg) == NO_COMMENTS)
         *offset += chrs_scanned;
@@ -109,19 +118,22 @@ void ReadPushArg(Compiler_t *compiler, size_t *offset)
         if (tolower((int) arg[1]) == 'r')
         {
             compiler->code[compiler->ip++] |= REGISTER;
-            sscanf(arg + 2, "%d]", &compiler->code[compiler->ip++]);
+            if(!sscanf(arg + 2, "%d]", &compiler->code[compiler->ip++]))
+                return SCAN_ERROR;
         }
         else
         {
             compiler->code[compiler->ip++] |= NUMBER;
-            sscanf(arg + 1, "%d]", &compiler->code[compiler->ip]);
+            if (!sscanf(arg + 1, "%d]", &compiler->code[compiler->ip]))
+                return SCAN_ERROR;
             compiler->code[compiler->ip++] *= PRECISION;
         }
     }
     else if (tolower((int) arg[0]) == 'r')
     {
         compiler->code[compiler->ip++] = REGISTER;
-        sscanf(arg + 1, "%d", &compiler->code[compiler->ip++]);
+        if (!sscanf(arg + 1, "%d", &compiler->code[compiler->ip++]))
+            return SCAN_ERROR;
     }
     else
     {
@@ -129,16 +141,19 @@ void ReadPushArg(Compiler_t *compiler, size_t *offset)
         compiler->code[compiler->ip++] =
             (int) (PRECISION * atof(arg));
     }
+
+    return SUCCESS;
 }
 
 int ReadJumpArg(Compiler_t *compiler, size_t *offset)
 {
-    assert(compiler);
-    assert(offset);
+    MY_ASSERT(compiler, "Null pointer given as argument.", exit(EXIT_FAILURE));
+    MY_ASSERT(offset, "Null pointer given as argument.", exit(EXIT_FAILURE));
 
     char arg[MAX_CMD_LEN] = {};
     int chrs_scanned = 0;
-    assert(sscanf(compiler->buffer + *offset, "%s%n", arg, &chrs_scanned));
+    MY_ASSERT(sscanf(compiler->buffer + *offset, "%s%n", arg, &chrs_scanned),
+                     "Scan error.", exit(EXIT_FAILURE));
 
     if (SkipCommentAftArg(compiler, offset, arg) == NO_COMMENTS)
         *offset += chrs_scanned;
@@ -160,6 +175,10 @@ int ReadJumpArg(Compiler_t *compiler, size_t *offset)
 
 comment_t SkipCommentAftArg(Compiler_t *compiler, size_t *offset, char *arg)
 {
+    MY_ASSERT(compiler, "Null pointer given as argument.", exit(EXIT_FAILURE));
+    MY_ASSERT(offset, "Null pointer given as argument.", exit(EXIT_FAILURE));
+    MY_ASSERT(arg, "Null pointer given as argument.", exit(EXIT_FAILURE));
+
     if (strchr(arg, ';') != NULL)
     {
         *strchr(arg, ';') = '\0';
@@ -178,6 +197,10 @@ comment_t SkipCommentAftArg(Compiler_t *compiler, size_t *offset, char *arg)
 
 comment_t SkipCommentAftCmd(Compiler_t *compiler, size_t *offset, char *command)
 {
+    MY_ASSERT(compiler, "Null pointer given as argument.", exit(EXIT_FAILURE));
+    MY_ASSERT(offset, "Null pointer given as argument.", exit(EXIT_FAILURE));
+    MY_ASSERT(command, "Null pointer given as argument.", exit(EXIT_FAILURE));
+
     if (strchr(command, ';') != NULL && command[0] != ';')
     {
         *strchr(command, ';') = '\0';

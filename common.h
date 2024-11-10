@@ -12,7 +12,8 @@ typedef enum
     ARG_NULL_PTR           = 4,
     WRONG_ARG              = 5,
     CAPACITY_LIMIT_REACHED = 6,
-    UNKNOWN_ERROR          = 7
+    SCAN_ERROR             = 7,
+    UNKNOWN_ERROR          = 8
 } errors_t;
 
 const int CODE_POISON = -1;
@@ -41,7 +42,8 @@ typedef enum
     JE,
     JNE,
     CALL,
-    RET
+    RET,
+    CHR
 } commands_t;
 
 typedef enum
@@ -58,5 +60,16 @@ const int STACK_RECALLOC_COEF = 2;
 const int CODE_RECALLOC_COEF = 2;
 
 void *Recalloc(void *data, size_t prev_size, size_t new_size, size_t elem_size);
+void PrintErr(errors_t res);
+
+#define MY_ASSERT(CHECKED_ARG, MESSAGE, ACTION) do                                         \
+    {                                                                                      \
+        if (!(CHECKED_ARG))                                                                \
+        {                                                                                  \
+            printf("Assertion failed: " #CHECKED_ARG "\nMessage: " MESSAGE                 \
+                   "\nFile: " __FILE__ "\nFunction: %s\nLine: %d\n\n", __func__, __LINE__);\
+            ACTION;                                                                        \
+        }                                                                                  \
+    } while(0)
 
 #endif
