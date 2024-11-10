@@ -7,19 +7,21 @@
 int main()
 {
     SPU_t SPU = {};
-    errors_t res = CreateSPU(&SPU);
+    unsigned int res = 0;
+    res |= CreateSPU(&SPU);
 
     if (!res)
     {
-        res = ReadFile("../program_code.bin", &SPU);
+        res |= ReadFile("../program_code.bin", &SPU);
 
         if (!res)
-            res = Run(&SPU);
+            res |= Run(&SPU);
 
-        res = DestroySPU(&SPU);
+        res |= DestroySPU(&SPU);
     }
 
-    PrintErr(res);
+    if (res)
+        PrintErr(res);
 
     printf("End of program.\n");
 

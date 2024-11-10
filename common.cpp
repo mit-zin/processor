@@ -16,38 +16,25 @@ void *Recalloc(void *data, size_t prev_size, size_t new_size, size_t elem_size)
     return data;
 }
 
-void PrintErr(errors_t res)
+void PrintErr(unsigned int res)
 {
-    switch (res)
-    {
-        case SUCCESS :
-            break;
-        case UNKNOWN_ERROR :
-            printf("Unknown error.\n");
-            break;
-        case FILE_NULL_PTR :
-            printf("File null pointer.\n");
-            break;
-        case STACK_ERROR :
-            printf("Stack error.\n");
-            break;
-        case NULL_PTR :
-            printf("Null pointer.\n");
-            break;
-        case ARG_NULL_PTR :
-            printf("Null pointer was given as argument.\n");
-            break;
-        case WRONG_ARG :
-            printf("Wrong argument.");
-            break;
-        case CAPACITY_LIMIT_REACHED :
-            printf("Capacity limit reached.");
-            break;
-        case SCAN_ERROR :
-            printf("Wrong input.");
-            break;
-        default :
-            printf("Unknown error.\n");
-    }
+    printf("Errors:\n");
+    if (res & FILE_NULL_PTR)
+        printf("File null pointer.\n");
+    if (res & STACK_ERROR)
+        printf("Stack error.\n");
+    if (res & NULL_PTR)
+        printf("Null pointer.\n");
+    if (res & ARG_NULL_PTR)
+        printf("Null pointer was given as argument.\n");
+    if (res & WRONG_ARG)
+        printf("Wrong argument.\n");
+    if (res & CAPACITY_LIMIT_REACHED)
+        printf("Capacity limit reached.\n");
+    if (res & SCAN_ERROR)
+        printf("Wrong input.\n");
+    if (res & UNKNOWN_ERROR)
+        printf("Unknown error.\n");
+    printf("\n");
 }
 

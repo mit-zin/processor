@@ -8,12 +8,12 @@ typedef enum
     SUCCESS                = 0,
     FILE_NULL_PTR          = 1,
     STACK_ERROR            = 2,
-    NULL_PTR               = 3,
-    ARG_NULL_PTR           = 4,
-    WRONG_ARG              = 5,
-    CAPACITY_LIMIT_REACHED = 6,
-    SCAN_ERROR             = 7,
-    UNKNOWN_ERROR          = 8
+    NULL_PTR               = 4,
+    ARG_NULL_PTR           = 8,
+    WRONG_ARG              = 16,
+    CAPACITY_LIMIT_REACHED = 32,
+    SCAN_ERROR             = 64,
+    UNKNOWN_ERROR          = 128
 } errors_t;
 
 const int CODE_POISON = -1;
@@ -60,7 +60,7 @@ const int STACK_RECALLOC_COEF = 2;
 const int CODE_RECALLOC_COEF = 2;
 
 void *Recalloc(void *data, size_t prev_size, size_t new_size, size_t elem_size);
-void PrintErr(errors_t res);
+void PrintErr(unsigned int res);
 
 #define MY_ASSERT(CHECKED_ARG, MESSAGE, ACTION) do                                         \
     {                                                                                      \
